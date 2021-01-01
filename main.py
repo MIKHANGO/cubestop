@@ -16,11 +16,11 @@ blue = (0, 0, 255)
 
 # игрок
 class Player(pygame.sprite.Sprite):
+
     # init
-    def __init__(self, color, wid, hei):
+    def __init__(self, wid, hei, img):
         pygame.sprite.Sprite.__init__(self) # наследование от Sprite
-        self.image = pygame.Surface((50, 50)) # размер
-        self.image.fill(color) # цвет
+        self.image = img # размер
         self.rect = self.image.get_rect() # прямоугольник, который окружает объект
         self.rect.center = (wid, hei) # распологаем игрока по центру экрана
 
@@ -34,15 +34,19 @@ class Player(pygame.sprite.Sprite):
         # влево
         if keystate[pygame.K_a]:
             self.speedx = -speed
+            self.image = pygame.image.load("img/left.jpeg").convert()
         # вправо
         if keystate[pygame.K_d]:
             self.speedx = speed
+            self.image = pygame.image.load("img/right.jpeg").convert()
         # вверх
         if keystate[pygame.K_w]:
             self.speedy = -speed
+            self.image = pygame.image.load("img/top.jpeg").convert()
         # вниз
         if keystate[pygame.K_s]:
             self.speedy = speed
+            self.image = pygame.image.load("img/bottom.jpeg").convert()
         # операции с координатами
         self.rect.x += self.speedx
         self.rect.y += self.speedy
@@ -58,6 +62,7 @@ class Player(pygame.sprite.Sprite):
         if self.rect.top > height:
             self.rect.top = 0
 
+
 # создаем игру и окно
 pygame.init()
 pygame.mixer.init() # звук
@@ -65,22 +70,23 @@ window = pygame.display.set_mode((width, height)) # окно
 pygame.display.set_caption("Chess 0.0.1-alfa") # название окна
 clock = pygame.time.Clock() # задержка между кадрами
 
-player_blue = Player(blue, width / 2, height / 2) # создаём игрока
-player_green = Player(green, width / 4, height / 2) # создаём игрока
-
 # рисование игроков
 sprites = pygame.sprite.Group()
 
 # хранение игроков
-entities = list()
+entities = []
 
 # добавление игроков
 def add_player(player):
     sprites.add(player)
     entities.append(player)
 
-add_player(player_green)
-add_player(player_blue)
+# player_green = Player(green, width / 4, height / 2) # создаём игрока
+
+# add_player(player_green) # добавляем его
+
+player = Player(width / 2, height / 2, pygame.image.load("img/bottom.jpeg").convert()) # создаём главного игрока
+add_player(player) # добавляем главного игрока
 
 # цикл игры
 running = True

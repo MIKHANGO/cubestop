@@ -18,11 +18,14 @@ blue = (0, 0, 255)
 class Player(pygame.sprite.Sprite):
 
     # init
-    def __init__(self, wid, hei, img):
+    def __init__(self, wid, hei, img, angel):
         pygame.sprite.Sprite.__init__(self) # наследование от Sprite
         self.image = img # размер
+        self.angel = angel # поворот пули
         self.rect = self.image.get_rect() # прямоугольник, который окружает объект
         self.rect.center = (wid, hei) # распологаем игрока по центру экрана
+        self.weapon_coordx = 0
+        self.weapon_coordy = 0
 
     # update
     def update_speed(self):
@@ -35,18 +38,34 @@ class Player(pygame.sprite.Sprite):
         if keystate[pygame.K_a]:
             self.speedx = -speed
             self.image = pygame.image.load("img/left.jpeg").convert()
+            self.angel = 270
+            self.weapon_coordx = 0
+            self.weapon_coordy = -10
+
         # вправо
         if keystate[pygame.K_d]:
             self.speedx = speed
             self.image = pygame.image.load("img/right.jpeg").convert()
+            self.angel = 0
+            self.weapon_coordx = 0
+            self.weapon_coordy = 10
+
         # вверх
         if keystate[pygame.K_w]:
             self.speedy = -speed
             self.image = pygame.image.load("img/top.jpeg").convert()
+            self.angel = 90
+            self.weapon_coordx = -10
+            self.weapon_coordy = 0
+
         # вниз
         if keystate[pygame.K_s]:
             self.speedy = speed
             self.image = pygame.image.load("img/bottom.jpeg").convert()
+            self.angel = 180
+            self.weapon_coordx = 10
+            self.weapon_coordy = 0
+
         # операции с координатами
         self.rect.x += self.speedx
         self.rect.y += self.speedy
@@ -62,6 +81,37 @@ class Player(pygame.sprite.Sprite):
         if self.rect.top > height:
             self.rect.top = 0
 
+    # shoot
+    def shoot(self):
+        # нажатие клавиш
+        keystate = pygame.key.get_pressed()
+
+        # стрельба пулями
+        if keystate[pygame.K_e]:
+            bullet = Bullet(self.rect.centerx, self.rect.top, self.angel, weapon, self.weapon_coordx, self.weapon_coordy)
+            sprites.add(bullet)
+            bullets.add(bullet)
+
+# bullets
+class Bullet(Player, pygame.sprite.Sprite):
+    def __init__(self, x, y, angel, weapon, weapon_coordx, weapon_coordy):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = weapon
+        self.rect = self.image.get_rect()
+        self.rect.bottom = y
+        self.rect.centerx = x
+        self.speedy = weapon_coordy
+        self.speedx = weapon_coordx
+        self.angel = angel
+
+    def update(self):
+        # для полёта
+        self.rect.y += self.speedy
+        self.rect.x += self.speedx
+
+        # убить, если он заходит за верхнюю часть экрана
+        if self.rect.bottom < 0:
+            self.kill()
 
 # создаем игру и окно
 pygame.init()
@@ -72,6 +122,7 @@ clock = pygame.time.Clock() # задержка между кадрами
 
 # рисование игроков
 sprites = pygame.sprite.Group()
+bullets = pygame.sprite.Group()
 
 # хранение игроков
 entities = []
@@ -85,7 +136,8 @@ def add_player(player):
 
 # add_player(player_green) # добавляем его
 
-player = Player(width / 2, height / 2, pygame.image.load("img/bottom.jpeg").convert()) # создаём главного игрока
+player = Player(width / 2, height / 2, pygame.image.load("img/bottom.jpeg").convert(), 180) # создаём главного игрока
+weapon = pygame.image.load("img/weapon.png").convert()
 add_player(player) # добавляем главного игрока
 
 # цикл игры
@@ -101,6 +153,8 @@ while running:
 
     for entity in entities:
         entity.update_speed()
+        entity.shoot()
+        bullets.update()
 
     # обновление
     sprites.update()

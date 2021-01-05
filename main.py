@@ -90,9 +90,12 @@ class Player:
         self.__position += direction * self.__speed * delta_time
 
     def __shoot(self, event: pygame.event.Event) -> None:
-        self.shooted.invoke(
-            copy(self.__position), pygame.Vector2(event.pos),
-        )
+        mouse_position = pygame.Vector2(event.pos)
+
+        if mouse_position != self.__position:
+            self.shooted.invoke(
+                copy(self.__position), mouse_position,
+            )
 
     def __get_direction(self) -> pygame.Vector2:
         keys = pygame.key.get_pressed()

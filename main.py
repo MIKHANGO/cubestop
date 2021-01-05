@@ -1,15 +1,12 @@
-# импортируем все библиотеки
 import pygame
 
 from copy import copy
 from typing import Callable, Protocol, List
 
-# длина и ширина окошка игры
-WIDTH, HEIGHT = 1100, 600
+WIDTH, HEIGHT = 900, 600
 
 
 class Event:
-    """"""
 
     def __init__(self) -> None:
         self.__listeners = list()
@@ -80,8 +77,8 @@ class Player:
         return self.__previous_direction
 
     def on_event(self, event: pygame.event.Event) -> None:
-        if self.__can_shoot(event):
-            self.__shoot()
+        dispather = EventDispather(event)
+        dispather.dispatch_mouse_button(1, self.__shoot)
 
     def on_update(self, delta_time: float) -> None:
         direction = self.__get_direction()
@@ -92,13 +89,10 @@ class Player:
 
         self.__position += direction * self.__speed * delta_time
 
-    def __shoot(self) -> None:
+    def __shoot(self, event: pygame.event.Event) -> None:
         self.shooted.invoke(
-            copy(self.__position), copy(self.__previous_direction)
+            copy(self.__position), pygame.Vector2(event.pos),
         )
-
-    def __can_shoot(self, event: pygame.event.Event) -> bool:
-        return event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE
 
     def __get_direction(self) -> pygame.Vector2:
         keys = pygame.key.get_pressed()
@@ -149,10 +143,10 @@ class PlayerRenderer(IRenderer):
 
 class Bullet:
 
-    def __init__(self, position: pygame.Vector2, direction: pygame.Vector2) -> None:
+    def __init__(self, position: pygame.Vector2, target: pygame.Vector2) -> None:
         self.__speed = 600.0
         self.__position = position
-        self.__direction = direction.normalize()
+        self.__direction = (target - position).normalize()
 
     @property
     def position(self) -> pygame.Vector2:
@@ -169,7 +163,6 @@ class Bullet:
 class BulletRenderer(IRenderer):
 
     __sprite = pygame.image.load("img/weapon.png")
-    __sprite.set_colorkey(pygame.Color(255, 255, 255))
 
     def __init__(self, handle: Bullet) -> None:
         self.__handle = handle
@@ -275,7 +268,7 @@ class Application:
 
     def __init__(self) -> None:
         self.__running = True
-        self.__title = "Cubestop 0.0.1-alfa"
+        self.__title = "Cubestop"
 
         self.__max_frame_rate = 60
         self.__clock = pygame.time.Clock()
@@ -306,7 +299,6 @@ class Application:
 
             pygame.display.update()
             self.__window.blit(self.__background, (0, 0))
-            # pygame.display.set_caption(f"{self.__title}: {self.__clock.get_fps()}")
 
             for event in pygame.event.get():
                 self.__on_event(event)
